@@ -10,7 +10,9 @@ from datetime import date, timedelta
 from typing import Any, Dict, List, Set
 
 # Group 50 is Division I.
-gamelist_url = "https://www.espn.com/mens-college-basketball/scoreboard/_/date/{}"
+gamelist_url = (
+    "https://www.espn.com/mens-college-basketball/scoreboard/_/date/{}/group/50"
+)
 gamestats_url = "https://www.espn.com/mens-college-basketball/matchup/_/gameId/{}"
 
 script_start = "window['__espnfitt__']="
