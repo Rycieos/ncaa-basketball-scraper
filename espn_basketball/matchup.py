@@ -14,7 +14,8 @@ def compile_data(start_date: date, end_date: date, output_path: str):
     games_data = asyncio.run(espn.get_games_data(start_date, end_date))
 
     # Get all field names in the game data dictionaries.
-    fieldnames = set().union(*(d.keys() for d in games_data))
+    fieldnames = list(set().union(*(d.keys() for d in games_data)))
+    fieldnames.sort()
 
     with open(output_path, "w", newline="") as csvfile:
         writer = csv.DictWriter(
