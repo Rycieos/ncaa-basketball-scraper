@@ -2,33 +2,18 @@
 
 import argparse
 import asyncio
-import csv
 import sys
 from datetime import date
 from typing import Dict, List
 
 import espn
+import util
 
 
 def compile_data(start_date: date, end_date: date, output_path: str):
     games_data = asyncio.run(espn.get_games_data(start_date, end_date))
 
-    # Get all field names in the game data dictionaries.
-    fieldnames = list(set().union(*(d.keys() for d in games_data)))
-    fieldnames.sort()
-
-    with open(output_path, "w", newline="") as csvfile:
-        writer = csv.DictWriter(
-            csvfile,
-            fieldnames=fieldnames,
-            delimiter=",",
-            quotechar='"',
-            quoting=csv.QUOTE_MINIMAL,
-        )
-        writer.writeheader()
-
-        for game_data in games_data:
-            writer.writerow(game_data)
+    util.write_data_to_csv(games_data, output_path)
 
 
 # Command line start point
