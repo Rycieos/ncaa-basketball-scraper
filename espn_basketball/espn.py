@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
+import aiohttp
+import asyncio
 import json
-import requests
 from bs4 import BeautifulSoup
 from datetime import date, timedelta
 from typing import Any, Dict, List, Set
@@ -17,9 +18,9 @@ script_end = ";"
 
 
 # Download the page, and load the data as a HTML document.
-def get_data(url: str) -> Dict[str, Any]:
-    resp = requests.get(url)
-    document = BeautifulSoup(resp.content, "html.parser")
+async def get_data(session: aiohttp.ClientSession, url: str) -> Dict[str, Any]:
+    async with session.get(url) as resp:
+        document = BeautifulSoup(await resp.text(), "html.parser")
 
     # Locate the specific object that contains all of the data, and capture it.
     scripts = document.find_all("script")
@@ -33,7 +34,9 @@ def get_data(url: str) -> Dict[str, Any]:
 
 
 # Get all game IDs between the two dates, inclusive.
-def get_game_list(start_date: date, end_date: date) -> Set[str]:
+async def get_game_list(
+    session: aiohttp.ClientSession, start_date: date, end_date: date
+) -> Set[str]:
     games: Set[str] = set()
 
     delta = end_date - start_date
@@ -42,7 +45,7 @@ def get_game_list(start_date: date, end_date: date) -> Set[str]:
     for i in range(delta.days + 1):
         day = start_date + timedelta(days=i)
 
-        data = get_data(gamelist_url.format(day.strftime("%Y%m%d")))
+        data = await get_data(session, gamelist_url.format(day.strftime("%Y%m%d")))
 
         gamelist = data["page"]["content"]["scoreboard"]["evts"]
         for game in gamelist:
@@ -52,8 +55,8 @@ def get_game_list(start_date: date, end_date: date) -> Set[str]:
 
 
 # Get all game data for the given ID.
-def get_game_data(game_id: str) -> Dict[str, str]:
-    raw_data = get_data(gamestats_url.format(game_id))["page"]
+async def get_game_data(session: aiohttp.ClientSession, game_id: str) -> Dict[str, str]:
+    raw_data = (await get_data(session, gamestats_url.format(game_id)))["page"]
     game_data: Dict[str, str] = dict()
     game_data["GameID"] = game_id
 
@@ -86,3 +89,19 @@ def get_game_data(game_id: str) -> Dict[str, str]:
             game_data["awayteam Score"] = team.get("score")
 
     return game_data
+
+
+async def get_games_data(start_date: date, end_date: date) -> List[Dict[str, str]]:
+    games_data: List[Dict[str, str]] = list()
+
+    async def gather_game_data(game: str):
+        games_data.append(await get_game_data(session, game))
+
+    async with aiohttp.ClientSession() as session:
+        games = await get_game_list(session, start_date, end_date)
+
+        # Run all game gathering tasks at the same time.
+        tasks = [gather_game_data(game) for game in games]
+        await asyncio.gather(*tasks)
+
+    return games_data

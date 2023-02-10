@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import asyncio
 import csv
 import sys
 from datetime import date
@@ -10,9 +11,7 @@ import espn
 
 
 def compile_data(start_date: date, end_date: date, output_path: str):
-    games_data: List[Dict[str, str]] = list()
-    for game in espn.get_game_list(start_date, end_date):
-        games_data.append(espn.get_game_data(game))
+    games_data = asyncio.run(espn.get_games_data(start_date, end_date))
 
     # Get all field names in the game data dictionaries.
     fieldnames = set().union(*(d.keys() for d in games_data))
