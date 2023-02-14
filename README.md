@@ -1,8 +1,8 @@
 # espn-basketball-scraper
 API and GUI applications to get NCAA basketball stats from the unofficial ESPN API.
 
-This program downloads stats for games from ESPN.com, and gathers them into a
-CSV file.
+This program downloads stats for games or players from ESPN.com, and gathers
+them into a CSV file.
 
 Included is a Tkinter GUI program and the Python source code. You can use
 the command line version or develop it by following these steps:
@@ -23,9 +23,16 @@ the command line version or develop it by following these steps:
 ## Development
 
 1. Hack away. To run the command line version, simply run `python3 matchup.py`
+   or `python3 player.py`.
 
-2. To run the GUI version, run `python3 gui.py`.
+2. To run the GUI version, run `python3 matchup_gui.py` or
+   `python3 player_gui.py`.
 
-3. To build the EXE version, run this command:
-   `pyinstaller gui.py --hidden-import matchup --paths=./ --hidden-import
-   babel.numbers --onefile --windowed`
+3. To build the EXE version, run these commands:
+  * For the matchup scraper:
+   `pyinstaller espn_basketball/matchup_gui.py --paths=./espn_basketball
+      --hidden-import babel.numbers --onefile --windowed`
+
+  * For the player scraper:
+   `pyinstaller espn_basketball/player_gui.py --paths=./espn_basketball
+      --onefile --windowed`
