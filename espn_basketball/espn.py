@@ -7,11 +7,14 @@ from datetime import date, timedelta
 from typing import Any, Dict, Iterator, List, Set, Tuple
 
 # Group 50 is Division I.
+teamlist_url = "https://www.espn.com/mens-college-basketball/teams/_/group/50"
+
 gamelist_url = (
     "https://www.espn.com/mens-college-basketball/scoreboard/_/date/{}/group/50"
 )
 gamestats_url = "https://www.espn.com/mens-college-basketball/matchup/_/gameId/{}"
 
+playerlist_url = "https://www.espn.com/mens-college-basketball/team/roster/_/id/{}"
 playerstats_url = "https://www.espn.com/mens-college-basketball/player/stats/_/id/{}"
 
 script_start = "window['__espnfitt__']="
@@ -20,10 +23,24 @@ script_end = ";"
 # Match a word with a "-" in it, and no digits.
 multi_stat_re = re.compile(r"[^\s\d]+-[^\s\d]+")
 
+
+async def get_url(session: aiohttp.ClientSession, url: str) -> str:
+    retries = 0
+    while True:
+        try:
+            async with session.get(url) as resp:
+                return await resp.text()
+        except aiohttp.client_exceptions.ClientOSError as e:
+            retries += 1
+            if retries > 3:
+                raise e
+            await asyncio.sleep(1)
+
+
 # Download the page, and load the data as a HTML document.
 async def get_data(session: aiohttp.ClientSession, url: str) -> Dict[str, Any]:
-    async with session.get(url) as resp:
-        document = BeautifulSoup(await resp.text(), "html.parser")
+    page = await get_url(session, url)
+    document = BeautifulSoup(page, "html.parser")
 
     # Locate the specific object that contains all of the data, and capture it.
     scripts = document.find_all("script")
@@ -123,8 +140,13 @@ def split_stat(key: str, value: str) -> Iterator[Tuple[str, str]]:
     return iter(())
 
 
-async def get_player_data(player_id: str) -> Dict[str, str]:
-    async with aiohttp.ClientSession() as session:
+async def get_player_data(
+    session: aiohttp.ClientSession, player_id: str, group_filter: List[str] = []
+) -> Dict[str, str]:
+    if not session:
+        async with aiohttp.ClientSession() as session:
+            raw_data = await get_data(session, playerstats_url.format(player_id))
+    else:
         raw_data = await get_data(session, playerstats_url.format(player_id))
 
     player_data: Dict[str, str] = dict()
@@ -134,20 +156,25 @@ async def get_player_data(player_id: str) -> Dict[str, str]:
     metadata = raw_data["page"]["content"]["player"]["plyrHdr"]["ath"]
     player_stats = raw_data["page"]["content"]["player"]["stat"]
 
-    player_data["birthplace"] = metadata["brthpl"]
-    player_data["position"] = metadata["pos"]
-    player_data["status"] = metadata["sts"]
-    player_data["team ID"] = metadata["tmUid"].split(":")[-1]
-    player_data["class"] = metadata["exp"]
-    player_data["height"], player_data["weight"] = metadata["htwt"].split(",")
-    player_data["team name"] = metadata["tm"]
-    player_data["first name"] = metadata["fNm"]
-    player_data["last name"] = metadata["lNm"]
-    player_data["full name"] = metadata["dspNm"]
-    player_data["display number"] = metadata["dspNum"]
+    player_data["birthplace"] = metadata.get("brthpl")
+    player_data["position"] = metadata.get("pos")
+    player_data["status"] = metadata.get("sts")
+    player_data["class"] = metadata.get("exp")
+    player_data["team name"] = metadata.get("tm")
+    player_data["first name"] = metadata.get("fNm")
+    player_data["last name"] = metadata.get("lNm")
+    player_data["full name"] = metadata.get("dspNm")
+    player_data["display number"] = metadata.get("dspNum")
+    if team_id := metadata.get("tmUid"):
+        player_data["team ID"] = team_id.split(":")[-1]
+    if height_weight := metadata.get("htwt"):
+        player_data["height"], player_data["weight"] = height_weight.split(",")
 
     for group in player_stats["tbl"]:
         prefix = group["ttl"]
+        if group_filter and prefix not in group_filter:
+            continue
+
         rows = group["row"] + [group["car"]]
 
         for index, column in enumerate(group["col"]):
@@ -156,6 +183,10 @@ async def get_player_data(player_id: str) -> Dict[str, str]:
                 continue
 
             key = f"{prefix} {column['ttl']}"
+
+            # Percentages can be derived from other fields.
+            if "Percentage" in key:
+                continue
 
             for row in rows:
                 season = row[0]
@@ -169,3 +200,60 @@ async def get_player_data(player_id: str) -> Dict[str, str]:
                     player_data[f"{key} {season}"] = row[index]
 
     return player_data
+
+
+async def get_team_list(session: aiohttp.ClientSession) -> Dict[str, Dict[str, str]]:
+    teams: Dict[str, Dict[str, str]] = dict()
+
+    data = await get_data(session, teamlist_url)
+
+    columnlist = data["page"]["content"]["leagueTeams"]["columns"]
+    grouplist = [group for column in columnlist for group in column["groups"]]
+
+    for group in grouplist:
+        group_name = group["nm"]
+
+        for team in group["tms"]:
+            teams[team["id"]] = {
+                "name": team["n"],
+                "group": group_name,
+            }
+
+    return teams
+
+
+async def get_player_list(session: aiohttp.ClientSession, team: str) -> List[str]:
+    players: List[str] = list()
+
+    data = await get_data(session, playerlist_url.format(team))
+
+    playerlist = data["page"]["content"]["roster"]["athletes"]
+
+    for player in playerlist:
+        players.append(player["id"])
+
+    return players
+
+
+async def get_league_players_data(group_filter: List[str] = []) -> List[Dict[str, str]]:
+    players_data: List[Dict[str, str]] = list()
+
+    async def gather_player_list(team: str):
+        players.extend(await get_player_list(session, team))
+
+    async def gather_player_data(player: str):
+        players_data.append(await get_player_data(session, player, group_filter))
+
+    async with aiohttp.ClientSession() as session:
+        teams = await get_team_list(session)
+
+        players: List[str] = list()
+
+        # Run all player gathering tasks at the same time.
+        tasks = [gather_player_list(team) for team in teams]
+        await asyncio.gather(*tasks)
+
+        tasks = [gather_player_data(player) for player in players]
+        await asyncio.gather(*tasks)
+
+    return players_data
