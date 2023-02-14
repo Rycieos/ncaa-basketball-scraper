@@ -3,10 +3,23 @@
 import argparse
 import asyncio
 import sys
-from typing import List
+from typing import List, Optional
 
 import espn
 import util
+
+
+def compile_data(
+    output_path: str, group_filter: List[str] = [], player: Optional[str] = None
+):
+    player_data = list()
+
+    if player:
+        player_data = [asyncio.run(espn.get_player_data(None, player))]
+    else:
+        player_data = asyncio.run(espn.get_league_players_data(group_filter))
+
+    util.write_data_to_csv(player_data, output_path)
 
 
 # Command line start point
@@ -29,14 +42,7 @@ def main(*argv: List[str]):
 
     args = parser.parse_args(*argv)
 
-    player_data = list()
-
-    if args.player:
-        player_data = [asyncio.run(espn.get_player_data(None, args.player))]
-    else:
-        player_data = asyncio.run(espn.get_league_players_data(args.group_filter))
-
-    util.write_data_to_csv(player_data, "playerdata.csv")
+    compile_data("playerdata.csv", args.group_filter, args.player)
 
 
 if __name__ == "__main__":

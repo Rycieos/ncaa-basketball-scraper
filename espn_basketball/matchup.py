@@ -4,7 +4,7 @@ import argparse
 import asyncio
 import sys
 from datetime import date
-from typing import Dict, List
+from typing import List
 
 import espn
 import util
