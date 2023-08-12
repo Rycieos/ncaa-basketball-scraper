@@ -3,8 +3,8 @@
 import tkinter
 from tkcalendar import DateEntry
 
-import gui
-import matchup
+import ncaa_basketball.gui as gui
+import ncaa_basketball.matchup as matchup
 
 
 class MatchupGui(gui.Gui):

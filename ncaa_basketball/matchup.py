@@ -4,8 +4,8 @@ import argparse
 import asyncio
 from datetime import date
 
-import espn
-import util
+import ncaa_basketball.espn as espn
+import ncaa_basketball.util as util
 
 
 def compile_data(start_date: date, end_date: date, output_path: str):

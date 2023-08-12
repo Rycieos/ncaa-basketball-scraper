@@ -4,8 +4,8 @@ import argparse
 import asyncio
 from typing import List, Optional
 
-import espn
-import util
+import ncaa_basketball.espn as espn
+import ncaa_basketball.util as util
 
 
 def compile_data(

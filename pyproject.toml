@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ncaa-basketball-scraper"
+authors = [
+    {name = "Mark Vander Stel", email = "mvndrstl@gmail.com"},
+]
+description = "API and GUI applications to get NCAA basketball stats from ESPN and NCAA"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "Apache-2.0"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "aiohttp==3.8.3",
+    "beautifulsoup4==4.11.1",
+    "pyinstaller==5.7.0",
+    "tkcalendar==1.6.1",
+    "types-beautifulsoup4==4.11.6.2",
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+dev = [
+    "black >= 23.7.0",
+    "ruff >= 0.0.284",
+    "mypy >= 1.0.0",
+]
+
+[project.scripts]
+matchup = "ncaa_basketball.matchup:main"
+player = "ncaa_basketball.player:main"

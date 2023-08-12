@@ -3,8 +3,8 @@
 import tkinter
 from typing import List
 
-import gui
-import player
+import ncaa_basketball.gui as gui
+import ncaa_basketball.player as player
 
 
 class PlayerGui(gui.Gui):
