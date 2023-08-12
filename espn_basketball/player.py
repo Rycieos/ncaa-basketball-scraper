@@ -2,7 +2,6 @@
 
 import argparse
 import asyncio
-import sys
 from typing import List, Optional
 
 import espn
@@ -23,7 +22,7 @@ def compile_data(
 
 
 # Command line start point
-def main(*argv: List[str]):
+def main():
     parser = argparse.ArgumentParser(
         description="Fetch NCAA basketball player stats and write them to a CSV file."
     )
@@ -40,10 +39,10 @@ def main(*argv: List[str]):
         help="Name of a group of stats to include. Can be specified multiple times.",
     )
 
-    args = parser.parse_args(*argv)
+    args = parser.parse_args()
 
     compile_data("playerdata.csv", args.group_filter, args.player)
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    main()

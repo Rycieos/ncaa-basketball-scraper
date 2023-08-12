@@ -2,9 +2,7 @@
 
 import argparse
 import asyncio
-import sys
 from datetime import date
-from typing import List
 
 import espn
 import util
@@ -17,7 +15,7 @@ def compile_data(start_date: date, end_date: date, output_path: str):
 
 
 # Command line start point
-def main(*argv: List[str]):
+def main():
     parser = argparse.ArgumentParser(
         description="Fetch NCAA basketball game stats and write them to a CSV file."
     )
@@ -33,7 +31,7 @@ def main(*argv: List[str]):
         help="Last date to fetch games from, inclusive.",
     )
 
-    args = parser.parse_args(*argv)
+    args = parser.parse_args()
 
     compile_data(
         date.fromisoformat(args.start_date),
@@ -43,4 +41,4 @@ def main(*argv: List[str]):
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    main()

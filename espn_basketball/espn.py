@@ -2,9 +2,10 @@ import aiohttp
 import asyncio
 import json
 import re
-from bs4 import BeautifulSoup
 from datetime import date, timedelta
 from typing import Any, Dict, Iterator, List, Set, Tuple
+
+from bs4 import BeautifulSoup
 
 # Group 50 is Division I.
 teamlist_url = "https://www.espn.com/mens-college-basketball/teams/_/group/50"
@@ -97,16 +98,16 @@ async def get_game_data(session: aiohttp.ClientSession, game_id: str) -> Dict[st
             # If this is a compound stat (like shots made with shots attempted),
             # break it out into different fields.
             if "-" in stat["n"]:
-                for l, d in zip(stat["n"].split("-"), stat["d"].split("-")):
-                    game_data["{}team {}".format(team, l)] = d
+                for n, d in zip(stat["n"].split("-"), stat["d"].split("-")):
+                    game_data["{}team {}".format(team, n)] = d
             else:
                 game_data["{}team {}".format(team, stat["l"])] = stat["d"]
 
-    for team in metadata["tms"]:
-        if team["isHome"]:
-            game_data["hometeam Score"] = team.get("score")
+    for team_data in metadata["tms"]:
+        if team_data["isHome"]:
+            game_data["hometeam Score"] = team_data.get("score")
         else:
-            game_data["awayteam Score"] = team.get("score")
+            game_data["awayteam Score"] = team_data.get("score")
 
     return game_data
 
@@ -141,7 +142,7 @@ def split_stat(key: str, value: str) -> Iterator[Tuple[str, str]]:
 
 
 async def get_player_data(
-    session: aiohttp.ClientSession, player_id: str, group_filter: List[str] = []
+    session: aiohttp.ClientSession | None, player_id: str, group_filter: List[str] = []
 ) -> Dict[str, str]:
     if not session:
         async with aiohttp.ClientSession() as session:
