@@ -12,17 +12,17 @@ class Gui(tkinter.Tk):
         self.program = None
 
         self.file_label = tkinter.Label(self, text="File: <none>")
-        self.file_label.grid(column=0, row=2)
+        self.file_label.grid(column=0, row=10)
         self.file_picker = tkinter.Button(
             self, text="Choose file", command=self.choose_file
         )
-        self.file_picker.grid(column=1, row=2)
+        self.file_picker.grid(column=1, row=10)
 
         self.button = tkinter.Button(self, text="Run", command=self.run)
-        self.button.grid(column=1, row=3)
+        self.button.grid(column=1, row=11)
 
         self.status = tkinter.Label(self, text="")
-        self.status.grid(column=0, row=3)
+        self.status.grid(column=0, row=11)
 
     def choose_file(self):
         self.output = tkinter.filedialog.asksaveasfilename(defaultextension=".csv")

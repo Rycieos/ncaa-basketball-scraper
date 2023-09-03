@@ -18,15 +18,15 @@ the command line version or develop it by following these steps:
 
 3. Activate the virtual environment: `.\venv\Scripts\Activate.ps1`
 
-4. Install the required dependencies: `pip install -r requirements.txt`
+4. Install the required dependencies: `pip install -e .`
 
 ## Development
 
-1. Hack away. To run the command line version, simply run `python3 matchup.py`
-   or `python3 player.py`.
+1. Hack away. To run the command line version, simply run `python3 matchup.py`,
+   `python3 player.py`, or `python3 play_by_play.py`.
 
-2. To run the GUI version, run `python3 matchup_gui.py` or
-   `python3 player_gui.py`.
+2. To run the GUI version, run `python3 matchup_gui.py`,
+   `python3 player_gui.py`, or `python3 play_by_play_gui.py`.
 
 3. To build the EXE version, run these commands:
   * For the matchup scraper:
@@ -36,3 +36,7 @@ the command line version or develop it by following these steps:
   * For the player scraper:
    `pyinstaller ncaa_basketball/player_gui.py --paths=./ncaa_basketball
       --onefile --windowed`
+
+  * For the play by play scraper:
+   `pyinstaller ncaa_basketball/play_by_play_gui.py --paths=./ncaa_basketball
+      --hidden-import babel.numbers ---onefile --windowed`
