@@ -1,5 +1,8 @@
+import asyncio
 import csv
 from typing import Dict, List
+
+import aiohttp
 
 
 def write_data_to_csv(data: List[Dict[str, str]], output_path: str):
@@ -16,6 +19,17 @@ def write_data_to_csv(data: List[Dict[str, str]], output_path: str):
             quoting=csv.QUOTE_MINIMAL,
         )
         writer.writeheader()
+        writer.writerows(data)
 
-        for row in data:
-            writer.writerow(row)
+
+async def get_url(session: aiohttp.ClientSession, url: str) -> str:
+    retries = 0
+    while True:
+        try:
+            async with session.get(url) as resp:
+                return await resp.text()
+        except aiohttp.client_exceptions.ClientOSError as e:
+            retries += 1
+            if retries > 3:
+                raise e
+            await asyncio.sleep(1)

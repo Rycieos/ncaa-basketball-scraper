@@ -33,3 +33,4 @@ dev = [
 [project.scripts]
 matchup = "ncaa_basketball.matchup:main"
 player = "ncaa_basketball.player:main"
+play_by_play = "ncaa_basketball.play_by_play:main"

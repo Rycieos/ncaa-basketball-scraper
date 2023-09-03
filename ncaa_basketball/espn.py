@@ -1,11 +1,13 @@
-import aiohttp
 import asyncio
 import json
 import re
 from datetime import date, timedelta
 from typing import Any, Dict, Iterator, List, Set, Tuple
 
+import aiohttp
 from bs4 import BeautifulSoup
+
+from ncaa_basketball.util import get_url
 
 # Group 50 is Division I.
 teamlist_url = "https://www.espn.com/mens-college-basketball/teams/_/group/50"
@@ -22,19 +24,6 @@ script_regex = re.compile(r"window\['__espnfitt__'\]=({.+?});")
 
 # Match a word with a "-" in it, and no digits.
 multi_stat_re = re.compile(r"[^\s\d]+-[^\s\d]+")
-
-
-async def get_url(session: aiohttp.ClientSession, url: str) -> str:
-    retries = 0
-    while True:
-        try:
-            async with session.get(url) as resp:
-                return await resp.text()
-        except aiohttp.client_exceptions.ClientOSError as e:
-            retries += 1
-            if retries > 3:
-                raise e
-            await asyncio.sleep(1)
 
 
 # Download the page, and load the data as a HTML document.
