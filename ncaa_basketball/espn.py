@@ -18,8 +18,7 @@ gamestats_url = "https://www.espn.com/mens-college-basketball/matchup/_/gameId/{
 playerlist_url = "https://www.espn.com/mens-college-basketball/team/roster/_/id/{}"
 playerstats_url = "https://www.espn.com/mens-college-basketball/player/stats/_/id/{}"
 
-script_start = "window['__espnfitt__']="
-script_end = ";"
+script_regex = re.compile(r"window\['__espnfitt__'\]=({.+?});")
 
 # Match a word with a "-" in it, and no digits.
 multi_stat_re = re.compile(r"[^\s\d]+-[^\s\d]+")
@@ -46,12 +45,13 @@ async def get_data(session: aiohttp.ClientSession, url: str) -> Dict[str, Any]:
     # Locate the specific object that contains all of the data, and capture it.
     scripts = document.find_all("script")
     for script in scripts:
-        if script.text.startswith(script_start):
-            data = script.text.removeprefix(script_start).removesuffix(script_end)
-            break
+        if capture := script_regex.search(script.text):
+            data = capture.group(1)
+            # Convert the text of the page into a data format Python understands.
+            return json.loads(data)
 
-    # Convert the text of the page into a data format Python understands.
-    return json.loads(data)
+    print("WARNING: found no data for URL {}".format(url))
+    return dict()
 
 
 # Get all game IDs between the two dates, inclusive.
