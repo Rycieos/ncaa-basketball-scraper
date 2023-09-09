@@ -106,16 +106,18 @@ def expand_pbp_data(events: List[Dict[str, str]], mirror: bool) -> List[Dict[str
         event["timeSeconds"] = str(int(time[0]) * 60 + int(time[1]))
 
         if text := event["homeText"]:
-            event["homePlayer"], event["visitorPlayer"] = get_player_from_event(
-                text, event["homeTeamName"]
-            )
-            event["eventType"], event["shotMade"] = get_event_type(text)
+            event["eventType"], event["shotMade"], with_player = get_event_type(text)
+            if with_player:
+                event["homePlayer"], event["visitorPlayer"] = get_player_from_event(
+                    text, event["homeTeamName"]
+                )
             event["isHomeEvent"] = "TRUE"
         elif text := event["visitorText"]:
-            event["visitorPlayer"], event["homePlayer"] = get_player_from_event(
-                text, event["visitorTeamName"]
-            )
-            event["eventType"], event["shotMade"] = get_event_type(text)
+            event["eventType"], event["shotMade"], with_player = get_event_type(text)
+            if with_player:
+                event["visitorPlayer"], event["homePlayer"] = get_player_from_event(
+                    text, event["visitorTeamName"]
+                )
             event["isHomeEvent"] = "FALSE"
 
         if player := event.get("homePlayer"):
@@ -214,9 +216,10 @@ def expand_pbp_data(events: List[Dict[str, str]], mirror: bool) -> List[Dict[str
     return results
 
 
-def get_event_type(event: str) -> Tuple[str, str]:
+def get_event_type(event: str) -> Tuple[str, str, bool]:
     event = event.lower()
     shot_made = ""
+    with_player = True
 
     if event.startswith("subbing"):
         event_type = "Sub"
@@ -230,6 +233,7 @@ def get_event_type(event: str) -> Tuple[str, str]:
         event_type = "Block"
     elif event.startswith("end of"):
         event_type = "End of period"
+        with_player = False
     elif event.startswith("free throw"):
         event_type = "Free throw"
         shot_made = "TRUE"
@@ -249,6 +253,7 @@ def get_event_type(event: str) -> Tuple[str, str]:
         event_type = "Dunk"
         shot_made = "TRUE"
     elif "time out" in event or "timeout" in event:
+        with_player = False
         if "short" in event or "30" in event:
             event_type = "Short timeout"
         elif "media" in event:
@@ -269,7 +274,7 @@ def get_event_type(event: str) -> Tuple[str, str]:
     if shot_made == "TRUE" and "missed" in event:
         shot_made = "FALSE"
 
-    return (event_type, shot_made)
+    return (event_type, shot_made, with_player)
 
 
 def get_player_from_event(event: str, team_name: str) -> Tuple[str, str]:
