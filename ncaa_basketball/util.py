@@ -10,7 +10,7 @@ def write_data_to_csv(data: List[Dict[str, str]], output_path: str):
     fieldnames = list(set().union(*(d.keys() for d in data)))
     fieldnames.sort()
 
-    with open(output_path, "w", newline="") as csvfile:
+    with open(output_path, "w", newline="", encoding="UTF-8") as csvfile:
         writer = csv.DictWriter(
             csvfile,
             fieldnames=fieldnames,

@@ -300,6 +300,8 @@ def get_player_from_event(event: str, team_name: str) -> Tuple[str, str]:
 
 def sanitize_name(name: str) -> str:
     name = name.strip()
+    # Special case for  Viktor Rajković.
+    name = name.replace("Ä\u0087", "ć")
     if not name or name == "team" or "shot clock" in name:
         return ""
     elif capture := player_sanitize.match(name):
