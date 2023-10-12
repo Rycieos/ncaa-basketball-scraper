@@ -27,8 +27,10 @@ async def get_url(session: aiohttp.ClientSession, url: str) -> str:
     while True:
         try:
             async with session.get(url) as resp:
+                if resp.status >= 500:
+                    resp.raise_for_status()
                 return await resp.text()
-        except aiohttp.client_exceptions.ClientOSError as e:
+        except aiohttp.ClientError as e:
             retries += 1
             if retries > 3:
                 raise e
