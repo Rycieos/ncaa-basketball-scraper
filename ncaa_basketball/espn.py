@@ -217,7 +217,10 @@ async def get_player_list(session: aiohttp.ClientSession, team: str) -> List[str
 
     data = await get_data(session, playerlist_url.format(team))
 
-    playerlist = data["page"]["content"]["roster"]["athletes"]
+    try:
+        playerlist = data["page"]["content"]["roster"]["athletes"]
+    except KeyError:
+        return players
 
     for player in playerlist:
         players.append(player["id"])
