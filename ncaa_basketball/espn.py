@@ -70,17 +70,20 @@ async def get_game_data(session: aiohttp.ClientSession, game_id: str) -> Dict[st
     game_data: Dict[str, str] = dict()
     game_data["GameID"] = game_id
 
-    game_data["GameTitle"] = raw_data["meta"]["title"]
+    try:
+        game_data["GameTitle"] = raw_data["meta"]["title"]
 
-    # Save references to the parts of the data we care about.
-    metadata = raw_data["content"]["gamepackage"]["gmStrp"]
-    team_stats = raw_data["content"]["gamepackage"]["tmStats"]
+        # Save references to the parts of the data we care about.
+        metadata = raw_data["content"]["gamepackage"]["gmStrp"]
+        team_stats = raw_data["content"]["gamepackage"]["tmStats"]
 
-    game_data["Game Date"] = metadata["dt"]
-    game_data["hometeam Name"] = team_stats["home"]["t"]["dspNm"]
-    game_data["hometeam ID"] = team_stats["home"]["t"]["id"]
-    game_data["awayteam Name"] = team_stats["away"]["t"]["dspNm"]
-    game_data["awayteam ID"] = team_stats["away"]["t"]["id"]
+        game_data["Game Date"] = metadata["dt"]
+        game_data["hometeam Name"] = team_stats["home"]["t"]["dspNm"]
+        game_data["hometeam ID"] = team_stats["home"]["t"]["id"]
+        game_data["awayteam Name"] = team_stats["away"]["t"]["dspNm"]
+        game_data["awayteam ID"] = team_stats["away"]["t"]["id"]
+    except KeyError:
+        return game_data
 
     for team in ["home", "away"]:
         for stat in team_stats[team]["s"].values():
